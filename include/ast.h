@@ -77,11 +77,11 @@ class PrototypeAST {
         }
 };
 
-class FuncitonAST {
+class FunctionAST {
     std::unique_ptr<PrototypeAST> Proto;
     std::unique_ptr<ExprAST> Body;
     public:
-        FuncitonAST(std::unique_ptr<PrototypeAST> Proto, 
+        FunctionAST(std::unique_ptr<PrototypeAST> Proto, 
             std::unique_ptr<ExprAST> Body) : Proto(std::move(Proto)), Body(std::move(Body)) {}
         void prettyPrint() {
             Proto->prettyPrint();
