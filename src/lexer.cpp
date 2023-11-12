@@ -12,11 +12,17 @@ int Lexer::gettok() {
             while (isalnum((LastChar = getchar())))
               IdentifierStr += LastChar;
 
-            if (IdentifierStr == "def")
+            if (IdentifierStr == "def") {
               return tok_def;
-            if (IdentifierStr == "extern")
+            }
+            if (IdentifierStr == "extern") {
               return tok_extern;
+            }
             return tok_identifier;
+          }
+          if (LastChar == '+' || LastChar == '-' || LastChar == '*'){
+            BinOp = LastChar;
+            return tok_binop;
           }
 
           if (isdigit(LastChar) || LastChar == '.') { // Number: [0-9.]+

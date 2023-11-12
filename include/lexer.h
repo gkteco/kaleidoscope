@@ -7,6 +7,7 @@ class Lexer {
     public:
         double NumVal;
         std::string IdentifierStr = "";
+        std::string BinOp = "";
         int gettok();
 };
 

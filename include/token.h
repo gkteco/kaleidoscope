@@ -7,7 +7,8 @@ enum Token {
     tok_def = -2,
     tok_extern = -3,
     tok_identifier = -4,
-    tok_number = -5
+    tok_number = -5,
+    tok_binop = -6
 };
 
 #endif
