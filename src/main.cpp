@@ -1,6 +1,7 @@
 #include "parser.h"
 
 
+
 int main() {
     // 2 + 3 * 4
     Parser parser = Parser(Lexer());

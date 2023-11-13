@@ -1,10 +1,21 @@
-cmake_minimum_required(VERSION 3.15)
-
+cmake_minimum_required(VERSION 3.10)
 project(kalec)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+# Set the C++ standard you wish to use (you'll need at least C++11)
+set(CMAKE_CXX_STANDARD 20)
 
-add_executable(kalec src/main.cpp src/parser.cpp src/lexer.cpp)
+# Find LLVM
+find_package(LLVM REQUIRED CONFIG)
 
-target_include_directories(kalec PUBLIC include)
+# Include LLVM directories
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+
+# Add your source files
+add_executable(kalec src/main.cpp src/lexer.cpp src/parser.cpp src/ast.cpp)
+target_include_directories(kalec PUBLIC "${PROJECT_BINARY_DIR}" include/)
+
+
+# Link against LLVM libraries
+llvm_map_components_to_libnames(llvm_libs support core irreader)
+target_link_libraries(kalec ${llvm_libs})
