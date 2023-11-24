@@ -2,12 +2,19 @@
 #include <memory>
 
 
-Parser::Parser(Lexer lexer) : lexer(lexer) {
+Parser::Parser(Lexer lexer, LLVMWrapper&& llvm_wrapper) : lexer(lexer), llvm_wrapper(std::move(llvm_wrapper)) {
     //install operator precedence
     BinOpPrecedence['<'] = 10;
     BinOpPrecedence['+'] = 20;
     BinOpPrecedence['-'] = 20;
     BinOpPrecedence['*'] = 40;
+}
+
+void Parser::initializeModule() {
+  llvm_wrapper.TheContext = std::make_unique<llvm::LLVMContext>();
+  llvm_wrapper.TheModule = std::make_unique<llvm::Module>("my cool jit", *llvm_wrapper.TheContext);
+  // Create a new builder for the module.
+  llvm_wrapper.Builder = std::make_unique<llvm::IRBuilder<>>(*llvm_wrapper.TheContext);
 }
 
 int Parser::getNextToken() {
@@ -176,24 +183,36 @@ std::unique_ptr<FunctionAST> Parser::ParseTopLevelExpr() {
 }
 
 void Parser::HandleDefinition() {
-    if (ParseDefinition()) {
-        fprintf(stderr, "Parsed a function definition.\n");
+    if (auto FnAST = ParseDefinition()) {
+        if(auto *FnIR = FnAST->codegen()) {
+            fprintf(stderr, "Read function definition:");
+            FnIR->print(llvm::errs());
+            fprintf(stderr, "\n");
+        }
     } else {
         getNextToken();
     }
 }
 
 void Parser::HandleExtern() {
-    if (ParseExtern()) {
-        fprintf(stderr, "Parsed an extern\n");
+    if (auto ExternAST = ParseExtern()) {
+        if(auto *ExternIR = ExternAST->codegen()) {
+            fprintf(stderr, "Read extern:");
+            ExternIR->print(llvm::errs());
+            fprintf(stderr, "\n");
+        }
     } else {
         getNextToken();
     }
 }
 
 void Parser::HandleTopLevelExpression() {
-    if (ParseTopLevelExpr()) {
-        fprintf(stderr, "Parsed a top-level expr\n");
+    if (auto TopLevelAST = ParseTopLevelExpr()) {
+        if(auto *TopLevelASTIR = TopLevelAST->codegen()) {
+            fprintf(stderr, "Read top-level expression:");
+            TopLevelASTIR->print(llvm::errs());
+            fprintf(stderr, "\n");
+        }
     } else {
         getNextToken();
     }

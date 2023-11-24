@@ -6,17 +6,18 @@
 #include <map>
 
 class Parser {
-    int CurTok;
-    Lexer lexer;
-
-    public:
+public:
     void ParsingLoop();
-    Parser(Lexer lexer);
+    Parser(Lexer lexer, LLVMWrapper&& llvm_wraper);
 
     //token buffer, lookahead = 1
     int getNextToken();
+    void initializeModule();
 
-    private:
+private:
+    int CurTok;
+    Lexer lexer;
+    LLVMWrapper llvm_wrapper;
     //operator precedence table
     std::map <char, int> BinOpPrecedence;
     //get precedence of current token
@@ -38,7 +39,6 @@ class Parser {
     std::unique_ptr<FunctionAST> ParseDefinition();
     std::unique_ptr<PrototypeAST> ParseExtern();
     std::unique_ptr<FunctionAST> ParseTopLevelExpr();
-
 
     //top level parsing
     void HandleDefinition();

@@ -1,14 +1,11 @@
 #include "parser.h"
 
-
-
 int main() {
-    // 2 + 3 * 4
-    Parser parser = Parser(Lexer());
-     // Prime the first token.
+    Parser parser = Parser(Lexer(), LLVMWrapper());
     fprintf(stderr, "ready> ");
     parser.getNextToken();
 
+    parser.initializeModule();
     parser.ParsingLoop();
     return 0;
 }

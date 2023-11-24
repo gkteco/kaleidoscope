@@ -1,25 +1,17 @@
 #ifndef AST_H
 #define AST_H
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Verifier.h"
-
+#include "llvm_wrapper.h"
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 
+
+
 class ExprAST {
 public:
   virtual ~ExprAST() = default;
+  virtual llvm::Value* codegen() = 0;
   virtual void prettyPrint() = 0;
 };
 
@@ -27,7 +19,8 @@ class NumberExprAST : public ExprAST {
     public:
         double Val;
         NumberExprAST(double Val) : Val(Val) {}
-        void prettyPrint() override {
+        llvm::Value* codegen() override;
+        void prettyPrint() {
             std::cout << Val;
         }
 };
@@ -36,7 +29,8 @@ class VariableExprAST : public ExprAST {
     std::string Name;
     public:
         VariableExprAST(const std::string &Name) : Name(Name) {}
-        void prettyPrint() override {
+        llvm::Value* codegen() override;
+        void prettyPrint() {
             std::cout << Name;
         }
 };
@@ -48,6 +42,7 @@ class BinOpExprAST : public ExprAST {
         BinOpExprAST(char Op, 
             std::unique_ptr<ExprAST> LHS, std::unique_ptr<ExprAST> RHS) : Op(Op), 
                                             LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+        llvm::Value* codegen() override;
         void prettyPrint() override {
             std::cout << "(";
             LHS->prettyPrint();
@@ -63,8 +58,8 @@ class CallExprAST : public ExprAST {
     public:
         CallExprAST(const std::string &Callee, 
             std::vector<std::unique_ptr<ExprAST>> Args) : Callee(Callee), Args(std::move(Args)) {}
-
-        void prettyPrint() override {
+        llvm::Value* codegen() override;
+        void prettyPrint() {
             std::cout << Callee << "(";
             for (auto &Arg : Args) {
                 Arg->prettyPrint();
@@ -80,6 +75,10 @@ class PrototypeAST {
     public:
         PrototypeAST(const std::string &Name, 
             std::vector<std::string> Args) : Name(Name), Args(std::move(Args)) {}
+        llvm::Function* codegen();
+        const std::string& getName() const {
+            return Name;
+        }
         void prettyPrint() {
             std::cout << Name << "(";
             for (auto &Arg : Args) {
@@ -95,6 +94,7 @@ class FunctionAST {
     public:
         FunctionAST(std::unique_ptr<PrototypeAST> Proto, 
             std::unique_ptr<ExprAST> Body) : Proto(std::move(Proto)), Body(std::move(Body)) {}
+        llvm::Function* codegen();
         void prettyPrint() {
             Proto->prettyPrint();
             std::cout << " = ";
