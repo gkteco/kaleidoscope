@@ -33,6 +33,8 @@
 #include <vector>
 #include <memory>
 
+static llvm::ExitOnError ExitOnErr;
+
 class LLVMWrapper {
 public:
     static std::unique_ptr<llvm::LLVMContext> TheContext;
@@ -47,6 +49,7 @@ public:
   static std::unique_ptr<llvm::ModuleAnalysisManager> TheMAM; 
   static std::unique_ptr<llvm::PassInstrumentationCallbacks> ThePIC; 
   static std::unique_ptr<llvm::StandardInstrumentations> TheSI; 
+  static std::unique_ptr<llvm::orc::KaleidoscopeJIT> TheJIT;
 };
 
 #endif

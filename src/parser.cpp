@@ -13,6 +13,7 @@ Parser::Parser(Lexer lexer, LLVMWrapper&& llvm_wrapper) : lexer(lexer), llvm_wra
 void Parser::initializeModule() {
   llvm_wrapper.TheContext = std::make_unique<llvm::LLVMContext>();
   llvm_wrapper.TheModule = std::make_unique<llvm::Module>("my cool jit", *llvm_wrapper.TheContext);
+  llvm_wrapper.TheModule->setDataLayout(llvm_wrapper.TheJIT->getDataLayout());
   // Create a new builder for the module.
   llvm_wrapper.Builder = std::make_unique<llvm::IRBuilder<>>(*llvm_wrapper.TheContext);
 
@@ -234,10 +235,16 @@ void Parser::HandleExtern() {
 
 void Parser::HandleTopLevelExpression() {
     if (auto TopLevelAST = ParseTopLevelExpr()) {
-        if(auto *TopLevelASTIR = TopLevelAST->codegen()) {
-            fprintf(stderr, "Read top-level expression:");
-            TopLevelASTIR->print(llvm::errs());
-            fprintf(stderr, "\n");
+        if(TopLevelAST->codegen()) {
+            auto RT = LLVMWrapper::TheJIT->getMainJITDylib().createResourceTracker();
+            auto TSM = llvm::orc::ThreadSafeModule(std::move(llvm_wrapper.TheModule), 
+                std::move(llvm_wrapper.TheContext));
+            ExitOnErr(LLVMWrapper::TheJIT->addModule(std::move(TSM), RT));
+            initializeModule();
+            auto ExprSymbol = ExitOnErr(LLVMWrapper::TheJIT->lookup("__anon_expr"));
+            double (*FP)() = ExprSymbol.getAddress().toPtr<double (*)()>();
+            fprintf(stderr, "Evaluated to %f\n", FP());
+            ExitOnErr(RT->remove());
         }
     } else {
         getNextToken();

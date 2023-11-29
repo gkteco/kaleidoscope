@@ -14,3 +14,4 @@ std::unique_ptr<llvm::CGSCCAnalysisManager> LLVMWrapper::TheCGAM;
 std::unique_ptr<llvm::ModuleAnalysisManager> LLVMWrapper::TheMAM; 
 std::unique_ptr<llvm::PassInstrumentationCallbacks> LLVMWrapper::ThePIC; 
 std::unique_ptr<llvm::StandardInstrumentations> LLVMWrapper::TheSI; 
+std::unique_ptr<llvm::orc::KaleidoscopeJIT> LLVMWrapper::TheJIT;
