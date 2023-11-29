@@ -15,6 +15,32 @@ void Parser::initializeModule() {
   llvm_wrapper.TheModule = std::make_unique<llvm::Module>("my cool jit", *llvm_wrapper.TheContext);
   // Create a new builder for the module.
   llvm_wrapper.Builder = std::make_unique<llvm::IRBuilder<>>(*llvm_wrapper.TheContext);
+
+  //create new pass and analysis managers
+  llvm_wrapper.TheFPM = std::make_unique<llvm::FunctionPassManager>();
+  llvm_wrapper.TheLAM = std::make_unique<llvm::LoopAnalysisManager>();
+  llvm_wrapper.TheFAM = std::make_unique<llvm::FunctionAnalysisManager>();
+  llvm_wrapper.TheCGAM = std::make_unique<llvm::CGSCCAnalysisManager>();
+  llvm_wrapper.TheMAM = std::make_unique<llvm::ModuleAnalysisManager>();
+  llvm_wrapper.ThePIC = std::make_unique<llvm::PassInstrumentationCallbacks>();
+  llvm_wrapper.TheSI = std::make_unique<llvm::StandardInstrumentations>(*llvm_wrapper.TheContext,
+                                                    /*DebugLogging*/ true);
+  llvm_wrapper.TheSI->registerCallbacks(*llvm_wrapper.ThePIC, llvm_wrapper.TheMAM.get());
+
+  // Add transform passes.
+// Do simple "peephole" optimizations and bit-twiddling optzns.
+llvm_wrapper.TheFPM->addPass(llvm::InstCombinePass());
+// Reassociate expressions.
+llvm_wrapper.TheFPM->addPass(llvm::ReassociatePass());
+// Eliminate Common SubExpressions.
+llvm_wrapper.TheFPM->addPass(llvm::GVNPass());
+// Simplify the control flow graph (deleting unreachable blocks, etc).
+llvm_wrapper.TheFPM->addPass(llvm::SimplifyCFGPass());
+  // Register analysis passes used in these transform passes.
+  llvm::PassBuilder PB;
+  PB.registerModuleAnalyses(*llvm_wrapper.TheMAM);
+  PB.registerFunctionAnalyses(*llvm_wrapper.TheFAM);
+  PB.crossRegisterProxies(*llvm_wrapper.TheLAM, *llvm_wrapper.TheFAM, *llvm_wrapper.TheCGAM, *llvm_wrapper.TheMAM);
 }
 
 int Parser::getNextToken() {

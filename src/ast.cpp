@@ -88,6 +88,7 @@ llvm::Function* FunctionAST::codegen() {
     if (llvm::Value* RetVal = Body->codegen()) {
         LLVMWrapper::Builder->CreateRet(RetVal);
         llvm::verifyFunction(*TheFunction);
+        LLVMWrapper::TheFPM->run(*TheFunction, *LLVMWrapper::TheFAM);
         return TheFunction;
     }
     TheFunction->eraseFromParent();

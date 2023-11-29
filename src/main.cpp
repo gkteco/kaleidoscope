@@ -7,5 +7,6 @@ int main() {
 
     parser.initializeModule();
     parser.ParsingLoop();
+    LLVMWrapper::TheModule->print(llvm::errs(), nullptr);
     return 0;
 }
